@@ -3,7 +3,7 @@
 #define DEBUG
 
 #define PLUGIN_AUTHOR "Simon"
-#define PLUGIN_VERSION "1.0"
+#define PLUGIN_VERSION "1.1"
 
 #include <sourcemod>
 #include <sdktools>
@@ -91,7 +91,7 @@ public Action Command_LookAtWeapon(int client, const char[] command, int argc)
 	GetClientEyePosition(client,vOrigin);
 	GetClientEyeAngles(client, vAngles);
 	GetClientAbsOrigin(victim, pos);
-	
+	pos[2] += 5.0;
 	float velocity[3];
 	SubtractVectors(pos, vOrigin, velocity);
 	NormalizeVector(velocity, velocity);
@@ -132,7 +132,7 @@ public int GetVictim(int client)
 }
 public bool TraceRayDontHitSelf(int entity, int mask, any data)
 {
-	if(entity == 0 || entity > MaxClients) 
+	if(entity == 0 || entity > MaxClients || entity == data) 
 	{
 		return false; 
 	}
