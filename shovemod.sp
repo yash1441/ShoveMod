@@ -8,7 +8,6 @@
 #include <sourcemod>
 #include <sdktools>
 #include <cstrike>
-//#include <sdkhooks>
 
 #pragma newdecls required
 
@@ -17,6 +16,10 @@ EngineVersion g_Game;
 Handle g_shove_enable;
 Handle g_shove_force;
 Handle g_shove_cooldown;
+
+bool IsCooldown[MAXPLAYERS + 1] =  { false, ... };
+float CooldownTime[MAXPLAYERS + 1] =  { 0.0, ... };
+Handle CooldownTimer[MAXPLAYERS + 1];
 
 bool shove_enable;
 float shove_force;
@@ -79,8 +82,16 @@ public Action Command_LookAtWeapon(int client, const char[] command, int argc)
 {
 	if(!IsPlayerAlive(client) || !shove_enable)
 	{
-		return Plugin_Continue;	
+		return Plugin_Continue;
 	}
+	
+	if(IsCooldown[client])
+	{
+		PrintToChat(client, "[Shove] Please wait %i seconds before using shove again.", RoundFloat(CooldownTime[client]));
+		return Plugin_Continue;
+	}
+	
+	CooldownTime[client] = shove_cooldown;
 	
 	int victim = GetVictim(client);
 	
@@ -91,14 +102,29 @@ public Action Command_LookAtWeapon(int client, const char[] command, int argc)
 	GetClientEyePosition(client,vOrigin);
 	GetClientEyeAngles(client, vAngles);
 	GetClientAbsOrigin(victim, pos);
-	pos[2] += 5.0;
 	float velocity[3];
 	SubtractVectors(pos, vOrigin, velocity);
 	NormalizeVector(velocity, velocity);
 	ScaleVector(velocity, shove_force);
+	SetEntityGravity(victim, 0.0);
 	TeleportEntity(victim, NULL_VECTOR, NULL_VECTOR, velocity);
+	SetEntityGravity(victim, 1.0);
+	
+	IsCooldown[client] = true;
+	CooldownTimer[client] = CreateTimer(1.0, ResetCooldown, client, TIMER_REPEAT);
 	
 	return Plugin_Handled;
+}
+
+public Action ResetCooldown(Handle timer, int client)
+{
+	--CooldownTime[client];
+	if(CooldownTime[client] == 0)
+	{
+		IsCooldown[client] = false;
+		return Plugin_Stop;
+	}
+	return Plugin_Continue;
 }
 
 public int GetVictim(int client)
