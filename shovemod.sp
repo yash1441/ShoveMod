@@ -3,7 +3,7 @@
 #define DEBUG
 
 #define PLUGIN_AUTHOR "Simon"
-#define PLUGIN_VERSION "1.1"
+#define PLUGIN_VERSION "1.2"
 
 #include <sourcemod>
 #include <sdktools>
@@ -44,8 +44,8 @@ public void OnPluginStart()
 
 	CreateConVar("shove_version", PLUGIN_VERSION, "ShoveMod Version", FCVAR_DONTRECORD | FCVAR_NOTIFY | FCVAR_REPLICATED | FCVAR_SPONLY);
 	g_shove_enable = CreateConVar("shove_enable", "1", "Shove enable? 0 = disable, 1 = enable", 0, true, 0.0, true, 1.0);
-  	g_shove_force = CreateConVar("shove_force", "1000", "Shove force.");
-  	g_shove_cooldown = CreateConVar("shove_cooldown", "5", "Shove cooldown.");
+  	g_shove_force = CreateConVar("shove_force", "1000", "Shove force.", 0, true, 0.0);
+  	g_shove_cooldown = CreateConVar("shove_cooldown", "5", "Shove cooldown.", 0, true, 1.0, true, 10.0);
   	
   	shove_enable = GetConVarBool(g_shove_enable);
   	shove_force = GetConVarFloat(g_shove_force);
@@ -106,8 +106,9 @@ public Action Command_LookAtWeapon(int client, const char[] command, int argc)
 	SubtractVectors(pos, vOrigin, velocity);
 	NormalizeVector(velocity, velocity);
 	ScaleVector(velocity, shove_force);
+	pos[2] += 5.0;
 	SetEntityGravity(victim, 0.0);
-	TeleportEntity(victim, NULL_VECTOR, NULL_VECTOR, velocity);
+	TeleportEntity(victim, pos, NULL_VECTOR, velocity);
 	SetEntityGravity(victim, 1.0);
 	
 	IsCooldown[client] = true;
